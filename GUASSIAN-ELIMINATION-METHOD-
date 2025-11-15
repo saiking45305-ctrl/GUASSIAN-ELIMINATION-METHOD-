@@ -1,0 +1,98 @@
+                                                      //GUASSIAN ELIMINATION METHOD  
+#include <stdio.h>
+#include <math.h>
+
+#define N 3
+
+void print_matrix(double M[N][N+1]) {
+    for (int i = 0; i < N; i++) {
+        printf("[ ");
+        for (int j = 0; j < N+1; j++) {
+            printf("%10.6f ", M[i][j]);
+        }
+        printf("]\n");
+    }
+    printf("\n");
+}
+
+void swap_rows(double M[N][N+1], int i, int j) {
+    printf("R(%d) <-> R(%d)\n", i+1, j+1);
+    for (int c = 0; c < N+1; c++) {
+        double temp = M[i][c];
+        M[i][c] = M[j][c];
+        M[j][c] = temp;
+    }
+    print_matrix(M);
+}
+
+void scale_and_add(double M[N][N+1], int src, double factor, int dest) {
+    printf("R(%d) <- R(%d) - (%.6f)*R(%d)\n", dest+1, dest+1, factor, src+1);
+
+    for (int c = 0; c < N+1; c++) {
+        M[dest][c] = M[dest][c] - factor * M[src][c];
+    }
+
+    print_matrix(M);
+}
+
+int main() {
+
+    double M[N][N+1] = {
+        {1.0, 10.0, -1.0, 3.0},
+        {2.0, 3.0, 20.0, 7.0},
+        {10.0, -1.0, 2.0, 4.0}
+    };
+
+    printf("Initial Augmented Matrix [A | b]:\n");
+    print_matrix(M);
+
+    // Forward elimination with partial pivoting
+    for (int col = 0; col < N; col++) {
+
+        // Pivot selection
+        int pivot_row = col;
+        for (int r = col + 1; r < N; r++) {
+            if (fabs(M[r][col]) > fabs(M[pivot_row][col])) {
+                pivot_row = r;
+            }
+        }
+
+        if (pivot_row != col) {
+            swap_rows(M, pivot_row, col);
+        }
+
+        double pivot = M[col][col];
+
+        if (fabs(pivot) < 1e-12) {
+            printf("Zero pivot encountered. System cannot be solved.\n");
+            return 1;
+        }
+
+        // Eliminate entries below pivot
+        for (int row = col + 1; row < N; row++) {
+            double factor = M[row][col] / pivot;
+            scale_and_add(M, col, factor, row);
+        }
+    }
+
+    printf("Upper-triangular matrix after forward elimination:\n");
+    print_matrix(M);
+
+    // Back substitution
+    double x[N];
+    for (int i = N-1; i >= 0; i--) {
+        double sum = M[i][N];
+        for (int j = i+1; j < N; j++) {
+            sum -= M[i][j] * x[j];
+        }
+        x[i] = sum / M[i][i];
+    }
+
+    // Output solution
+    printf("Solution Vector:\n");
+    for (int i = 0; i < N; i++) {
+        printf("x%d = %.8f\n", i+1, x[i]);
+    }
+
+    return 0;
+}
